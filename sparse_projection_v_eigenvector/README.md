@@ -1,0 +1,3 @@
+# Sparse Projections vs Eigenvalues
+
+[Wang and Samworth (2018)](https://arxiv.org/pdf/1606.06246.pdf) propose finding a single changepoint by projection onto the leading left k-sparse singular value of the CUSUM transformed data. This can be seen as a data driven way of estimating the oracle projection direction explored in [Aston and Kirch (2016)](https://arxiv.org/pdf/1409.1771.pdf). An alternative and conceptually simpler estimator for the oracle turns out to be the first eigenvector of the sample covaraince matrix. Simulations are presented comparing the accuracy of the two projection directions. 
