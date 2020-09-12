@@ -14,17 +14,19 @@ How to choose T? For a univariate signal [Baranowski et al (2019)][1] use the ge
 
 1. L-2 aggregation following [Horvath and Huskova (2012)][2]
 2. L-infinity aggregation following [Jirak (2015)][3]
-3. 'Scan' aggregation follolwing [Enikeeva and Harachoui (2013)][4]
+3. 'Scan' aggregation following [Enikeeva and Harachoui (2013)][4]
+4. L-2 aggregation with self-normalization following [Shao and Zhang (2010)][5]
 
 ## Simulations
 
 Simulations are run to check whether each aggregation method performs well (✔) or poorly (❌) in the presence of the features which are know to make multivariate changepoint detection tricky:  
 
-| aggregation method | unbalanced changepoint location | change sparsity | spatial dependence | serial dependence |
-|--------------------|---------------------------------|-----------------|--------------------|-------------------|
-| L-2                |                                 |                 |                    |                   |
-| L-Infinity         |                                 |                 |                    |                   |
-| 'Scan'             |                                 |                 |                    |                   |
+| aggregation method |  changepoint location | change density | size of change | spatial dependence | serial dependence |
+|--------------------|-----------------------|----------------|----------------|--------------------|-------------------|
+| L-2                |                       |                |                |                    |                   |
+| L-Infinity         |                       |                |                |                    |                   |
+| 'Scan'             |                       |                |                |                    |                   |
+| Self-Normalization |                       |                |                |                    |                   |
 
 \* To construct the most balanced intervals one possible approach is to isolate each changepoint in an interval so that the sum of squared lengths of the intervals in minimal.
 
@@ -32,3 +34,4 @@ Simulations are run to check whether each aggregation method performs well (✔)
 [2]: https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9892.2012.00796.x
 [3]: https://projecteuclid.org/euclid.aos/1444222081
 [4]: https://arxiv.org/abs/1312.1900
+[5]: http://www.stat.tamu.edu/~zhangxiany/JASA-2010.pdf
