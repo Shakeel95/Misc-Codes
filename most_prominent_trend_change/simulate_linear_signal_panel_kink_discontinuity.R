@@ -38,6 +38,8 @@ AR.1 <- function(n,val){
   
   S <- toeplitz(val**(1:n))
   
+  diag(S) <- diag(S) * sign(diag(S))
+  
   return(S)
 }
 

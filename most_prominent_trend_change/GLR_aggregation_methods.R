@@ -105,7 +105,7 @@ LRV.kernel.lin <- function(x) {
   
   return(max(asymvar.acf(res)$lrv, 
              acf(res, lag.max = 0, type = "covariance", plot = FALSE)$acf / 2 )
-         )
+  )
   
 }
 
@@ -118,7 +118,7 @@ studentize.lin.signal <- function(X, var.est) {
   #'@param X matrix or data frame 
   
   
-  if (!(var.est %in% c("MAD","res.var","kernel.LRV"))) stop("var.est must be one of 'MAD','res.var','kernel.LRV'")
+  if (!(var.est %in% c("MAD","res.var","kernel.LRV","no.student"))) stop("var.est must be one of 'MAD','res.var','kernel.LRV','no.student'")
   
   
   if (var.est == "res.var") return(apply(X,2,var.pcws.lin.residuals))
@@ -126,29 +126,46 @@ studentize.lin.signal <- function(X, var.est) {
   if (var.est == "MAD") return(apply(X,2,MAD.pcws.lin))
   
   if (var.est == "kernel.LRV") return(apply(X,2,LRV.kernel.lin))
-
+  
+  if (var.est == "no.student") return(rep(1,ncol(X)))  
+  
 }
 
 
-#-----------------------------------------------------------------
+is.string <- function(x) {
+  
+  #' checks if x is string
+  
+  is.character(x) && length(x) == 1
+  
+}
+
+#------------------------
 # 
-# Aggreagtion methods from Enikeeva and Harchaoui (2014)
+# GLR aggregation methods
 #
-# High-dimensional change-point detection with sparse alternatives
-#
-#-----------------------------------------------------------------
+#------------------------
 
 
-EH.lin.GLR <- function(CUSUM, X, var.est) {
+GLR.l2 <- function(CUSUM, X, var.est) {
   
   #' L_2 aggregation of GLR statistics based on Normal likelihood + Chi-square distribution 
   #'
   #'@param CUSUM vector, output from vec.GLR function
   #'@param X matrix or data frame
-  #'@param var.est vector, estimated variance / LRV to studentize 
+  #'@param var.est string, type of studentizer to calculate
+
   
-  
-  CUSUM <- (CUSUM**2) / studentize.lin.signal(X, var.est)
+  if (is.string(var.est)) {
+    
+    CUSUM <- (CUSUM**2) / studentize.lin.signal(X, var.est)
+    
+  } else {
+    
+    CUSUM <- (CUSUM**2) / var.est
+    
+  }
+
   
   n <- length(CUSUM)
   
@@ -157,17 +174,25 @@ EH.lin.GLR <- function(CUSUM, X, var.est) {
 }
 
 
-
-EH.scan.GLR <- function(CUSUM, X, var.est) {
+GLR.scan <- function(CUSUM, X, var.est) {
   
   #' Scan statistic aggregation of GLR based on marginal likelihood argument 
   #'
   #'@param CUSUM vector, output from vec.GLR function
   #'@param X matrix or data frame
-  #'@param var.est vector, estimated variance / LRV to studentize 
+  #'@param var.est string, type of studentizer to calculate
   
   
-  CUSUM <- (CUSUM**2) / studentize.lin.signal(X, var.est)
+  if (is.string(var.est)) {
+   
+    CUSUM <- (CUSUM**2) / studentize.lin.signal(X, var.est) 
+    
+  } else {
+    
+    CUSUM <- (CUSUM**2) / var.est
+    
+  }
+  
   
   CUSUM <- sort(CUSUM, decreasing = TRUE)
   
@@ -180,76 +205,95 @@ EH.scan.GLR <- function(CUSUM, X, var.est) {
 }
 
 
-GLR.self.normalizing <- function(CUSUM, X, b) {
+GLR.max <- function(CUSUM, X, var.est, b) {
   
-  #' Self-normalizing L2 aggregation of univariate GLRs
-  #'
-  #'@param CUSUM vector, output from vec.GLR function
-  #'@param X matrix or data frame, dimension T x n 
-  #'@param b int, potential break loaction
-  
-  
-  tt <- nrow(X)
-  n <- ncol(X)
-  U <- (sum(CUSUM**2) - n) / (sqrt(2*n))
-  
-  W.1 <- 0
-  for (k in 3:(b-3)) W.1 <- W.1 + ((sum(vec.GLR(X[1:b,],k)**2) - n) / sqrt(2*n))**2
-  
-  W.2 <- 0
-  for (k in (b+3):(tt-3)) W.2 <- W.2 + ((sum(vec.GLR(X[(b+1):tt,],k)**2) - (n)) / sqrt(2*n))**2
-  
-  W <- (1/tt)*(W.1 + W.2)
-  
-  
-  return((U**2)/W)
-  
-}
-
-
-SN.new <- function(CUSUM, X, b) {
-  
-  #' Self-normalizing L2 aggregation of univariate GLRs
-  #'
-  #'@param CUSUM vector, output from vec.GLR function
-  #'@param X matrix or data frame, dimension T x n 
-  #'@param b int, potential break loaction
-  
-  
-  tt <- nrow(X)
-  n <- ncol(X)
-  U <- sum(CUSUM**2)
-  
-  W.1 <- 0
-  for (k in 3:(b-3)) W.1 <- W.1 + sum(vec.GLR(X[1:b,],k)**2)
-  
-  W.2 <- 0
-  for (k in 3:(tt-b-3)) W.2 <- W.2 + sum(vec.GLR(X[(b+1):tt,],k)**2)
-  
-  W <- (1/tt)*(W.1 + W.2)
-  
-  
-  return(U/W)
-  
-}
-
-
-
-J.max.GLR <- function(CUSUM, X, var.est, b) {
- 
   #' L infinity aggregation of GLR statistics  
   #'
   #'@param CUSUM vector, output from vec.GLR function
   #'@param X matrix or data frame, dimension T x n 
   #'@param b int, potential break loaction
   
-  tt <- nrow(X)
   
-  CUSUM <- (CUSUM**2) / studentize.lin.signal(X, var.est)
+  if (is.string(var.est)) {
+    
+    CUSUM <- (CUSUM**2) / studentize.lin.signal(X, var.est)
+    
+  } else {
+    
+    CUSUM <- (CUSUM**2) / var.est
+    
+  }
+  
+  
+  tt <- nrow(X)
   
   return(sqrt((b*(tt-b))/tt)*max(CUSUM))
   
 }
 
 
+#-------------------------------
+#
+# Contrast function aggregation
+# 
+#-------------------------------
 
+
+contrasts.SN <- function(X, b) {
+  
+  #' Self Normalised contrast function
+  #'
+  #'@param X matrix or data frame of dimension T x n
+  #'@param b int, potential break location 
+  
+  
+  return(0)
+  
+}
+
+
+#-------------------------------------------------
+#
+# Estimate changepoint location using all methods
+#
+#-------------------------------------------------
+
+
+estimate.cpt.loc <- function(X, var.est, verbose = T) {
+  
+  #'Recover changepoint location from each of the three GLR aggreagtion methods
+  #'
+  #'@param X matrix or data frame
+  #'@param var.est 
+
+  
+  vals.GLR.l2 <- c()
+  vals.GLR.max <- c()
+  vals.GLR.scan <- c()
+  vals.GLR.SN <- c()
+  
+  
+  for (b in 2:(nrow(X)-2)) {
+    
+    CUSUM <- vec.GLR(X,b)
+    studentizer <- studentize.lin.signal(X,var.est)
+    
+    vals.GLR.l2 <- c(vals.GLR.l2, GLR.l2(CUSUM, X, studentizer))
+    vals.GLR.max <- c(vals.GLR.max, GLR.max(CUSUM, X, studentizer, b))
+    vals.GLR.scan <- c(vals.GLR.scan, GLR.scan(CUSUM, X, studentizer))
+    vals.GLR.SN <- c(vals.GLR.SN, 0)
+    
+    if (verbose) cat("\r","Calculated statistic at time point ",paste0(b))
+    
+  }
+  
+  if (verbose) cat("\n\n")
+  
+  return(list(
+    res.l2 = list(vals = vals.GLR.l2, cpt = which.max(vals.GLR.l2) + 1), 
+    res.max = list(vals = vals.GLR.max, cpt = which.max(vals.GLR.max) + 1), 
+    res.scan = list(vals = vals.GLR.scan, cpt = which.max(vals.GLR.scan) + 1), 
+    res.SN = list(vals = vals.GLR.SN, cpt = which.max(vals.GLR.SN) + 1)
+  ))
+  
+}
