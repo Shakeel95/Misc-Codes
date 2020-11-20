@@ -26,15 +26,21 @@ limit.distr <- function(x) exp(-exp(-x))
 
 x <- seq(from = -2, to = 3, length.out = 1000)
 
-n.seq <- seq(from = 10, to = 100, by = 30)
+n.seq <- seq(from = 100, to = 500, by = 100)
+
+n.cols <- colorRampPalette(c("blue", "red"))(5)
 
 
 # CDF plots
 
 plot(x, limit.distr(x), type = "l", ylab = "CDF")
 
-for (n in n.seq) lines(x, sapply(x, function(j) exact.distr(j,n)), col = n, type = "l")
+for (n in n.seq) lines(x, sapply(x, function(j) exact.distr(j,n)), col = n.cols[which(n.seq == n)], type = "l")
 
+legend(-2, .95, 
+       legend = sapply(n.seq, function(i) paste0("n = ", i)), 
+       col = n.cols, 
+       lty = rep(1,length(n.seq)))
 
 
 #-------------------------------------------------------------------------
@@ -64,4 +70,9 @@ for (e in 1:length(n.seq)) {
 
 plot(x, limit.distr(x), type = "l")
 
-for (e in 1:length(n.seq)) lines(x, CDFs[[e]](x), col = e)
+for (e in 1:length(n.seq)) lines(x, CDFs[[e]](x), col = n.cols[e])
+
+legend(-2, .95, 
+       legend = sapply(n.seq, function(i) paste0("n = ", i)), 
+       col = n.cols, 
+       lty = rep(1,length(n.seq)))
