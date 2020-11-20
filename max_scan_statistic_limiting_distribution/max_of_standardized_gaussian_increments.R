@@ -15,7 +15,9 @@ library(doParallel)
 
 # normalizing constants
 
-H <- 0.82 
+# H value from Kabluchko's email to Piotr
+
+H <- 0.858547 
 
 a <- function(n) sqrt(2*log(n)) + (0.5*log(log(n)) + log(H) - log(2*sqrt(pi))) / sqrt(2*log(n))
 
@@ -33,6 +35,8 @@ limit.distr <- function(x) exp(-exp(-x))
 x <- seq(from = -5, to = 5, length.out = 1000)
 
 n.seq <- seq(from = 100, to = 500, by = 100)
+
+n.cols <- colorRampPalette(c("blue", "red"))(5)
 
 
 
@@ -72,7 +76,12 @@ for (q in 1:length(n.seq)) {
 
 plot(x, limit.distr(x), type = "l")
 
-for (q in 1:length(n.seq)) lines(x, CDFs[[q]](x), col = q)
+for (q in 1:length(n.seq)) lines(x, CDFs[[q]](x), col = n.cols[q])
+
+legend(-5, 1, 
+       legend = sapply(n.seq, function(i) paste0("n = ", i)), 
+       col = n.cols, 
+       lty = rep(1,length(n.seq)))
 
 
 # stop paralell backend
