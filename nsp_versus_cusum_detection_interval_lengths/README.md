@@ -1,0 +1,7 @@
+# NSP versus CUSUM detection intervals
+
+Take n observations from a piecewise constant signal with a single break + centered and scaled Gaussian noise. Given a sub-interval I = [s,e] of [1,n] we may wish to test whether the particular interval contains the break. A popular choice is the CUSUM statistic. Another option is the multiscale test introduced in [Fryzlewicz (2020)](https://stats.lse.ac.uk/fryzlewicz/nsp/nsp.pdf).
+
+Take all sub-intervals of [1,n]. This simulation investigates the average width of of the *narrowest* interval on which the CUSUM and multiresolution tests will correctly detect the break. To control the FWER of the O(n^2) tests performed for the multiresolution test I use the results of [Kabluchko (2007)](https://arxiv.org/abs/0706.1849). The approximate p-values for the CUSUM statistic calculated at all scales and locations on a vector of pure noise are obtained by [Fang, Li, and Siegmund (2018)](https://arxiv.org/abs/1608.03032).
+
+The simulation shows that for weak signals (small jump size) the CUSUM statistic requires a smaller interval to detect the change. 
