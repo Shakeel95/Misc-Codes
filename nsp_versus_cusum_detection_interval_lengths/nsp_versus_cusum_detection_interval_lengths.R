@@ -15,6 +15,7 @@ make_signal <- function(n, cpt_loc, cpt_energy, pre_change_mean = 0) {
   #'@param cpt_energy float, changepoint energy (cf. Verzen et al. 2020)
   #'@param pre_change_mean float, pre_change_mean
   
+  
   post_change_mean = (-1)**rbinom(1,1,0.5) * (pre_change_mean + cpt_energy*sqrt(n/(cpt_loc*(n-cpt_loc))))
   
   rnorm(n) + c(rep(pre_change_mean, cpt_loc), rep(post_change_mean, n - cpt_loc))
@@ -88,9 +89,9 @@ multiresolution_test <- function(s, e, dyadic_scans, alpha = 0.05) {
   
   for (j in 0:J) {
     
-    f_const <- c(f_const, dyadic_scans[s:(l-2**j),1,j])
+    f_const <- c(f_const, dyadic_scans[s:(s+l-2**j),1,(j+1)])
     
-    f_rhs <- c(f_rhs, dyadic_scans[s:(l-2**j),2,j])
+    f_rhs <- c(f_rhs, dyadic_scans[s:(s+l-2**j),2,(j+1)])
     
   }
   
@@ -225,48 +226,12 @@ nu <- function(x) {
 #--------------------------------------------------
 
 
-deterministic_grid <- function(n, M) {
+apply_tests_to_signal <- function(x, cpt_loc, cusum_thresh, alpha = 0.05, show_prog = TRUE) {
   
-  #'Generat a deterministic grid on [1,n] containing M intervals 
+  #' Apply cusum and multiresolution tests to all sub-intervals of signal containig the changepoint
   #'
-  #'@param n int, length of signal
-  #'@param M int, number of intervals in grid
-  
-  
-  
-  if (M >= n*(n-1)) {
-    
-    intervals <- combn(1:n,2)
-    
-    interval_order <- order(intervals[2,] - intervals[1,])
-    
-    return(intervals[, interval_order, drop = FALSE])
-    
-  }
-  
-  
-  K <- floor((1 + sqrt(1+8*M))/2)
-  
-  shift <- floor((n-1)/(K-1))
-  
-  intervals <- combn(1:K,2)
-  
-  interval_order <- order(intervals[2,] - intervals[1,])
-  
-  intervals <- intervals[, interval_order, drop = FALSE]
-  
-  
-  return((intervals-1)*shift + 1)
-  
-}
-
-
-sampling_scheme <- function(x, M, cusum_thresh, alpha = 0.05, show_prog = TRUE) {
-  
-  #' Apply multiresolution and NSP tests to sample using NSP sampling scheme
-  #' 
-  #'@param x vector, 
-  #'@param M int, number of intervals to draw - constructs deterministic grid
+  #'@param x vector, signal to test
+  #'@param cpt_loc float, changepoint location
   #'@param cusum_thresh float, threshold obtained from `bisect_get_cusum_thresh`
   #'@param alpha float, coverage probability control
   #'@param show_prog bool, whetehr to display progress bar
@@ -274,59 +239,65 @@ sampling_scheme <- function(x, M, cusum_thresh, alpha = 0.05, show_prog = TRUE) 
   
   n <- length(x)
   
-  intervals <- deterministic_grid(n,M)
+  effective_n <- min(cpt_loc, n - cpt_loc)
+  
+  
+  if (effective_n < 3) return(list(multiresolution_interval = c(0,0), cusum_interval = c(0,0)))
+  
+  
+  pb <- txtProgressBar(min = 1, max = effective_n, style = 3)
   
   dyadic_scans <- make_dyadic_scans(x)
   
   cumulative_sum <- c(0, cumsum(x))
-  
-  K <- ncol(intervals)
-  
-  if (show_prog) pb <- txtProgressBar(min = 1, max = K, style = 3)
   
   
   multiresolution_flag <- FALSE; cusum_flag <- FALSE
   
   multiresolution_interval <- c(0,0); cusum_interval <- c(0,0)
   
-  
-  for (k in 1:K) {
+  for (j in 3:effective_n) {
     
-    loc <- intervals[,k]
+    for (k in 1:(j-2)) {
+      
+      loc <- c(cpt_loc - k, cpt_loc + j - (k+1))
+      
+      if (!cusum_flag) {
+        
+        cusum_flag <- cusum_test(loc[1], loc[2], cumulative_sum, cusum_thresh)
+        
+        if (cusum_flag) cusum_interval <- loc
+        
+      }
+      
+      
+      if (!multiresolution_flag) {
+        
+        multiresolution_flag <- multiresolution_test(loc[1], loc[2], dyadic_scans, alpha)
+        
+        if (multiresolution_flag) multiresolution_interval <- loc
+        
+      }
+      
+      if (show_prog) setTxtProgressBar(pb, j)
+      
+      if (cusum_flag && multiresolution_flag) return(list(multiresolution_interval = multiresolution_interval, cusum_interval = cusum_interval))
+      
+    }
     
-    if (!cusum_flag) {
-
-      cusum_flag <- cusum_test(loc[1], loc[2], cumulative_sum, cusum_thresh)
-
-      if (cusum_flag) cusum_interval <- loc
-
-    }
-
-
-    if (!multiresolution_flag) {
-
-      multiresolution_flag <- multiresolution_test(loc[1], loc[2], dyadic_scans, alpha)
-
-      if (multiresolution_flag) multiresolution_interval <- loc
-
-    }
-
-    if (show_prog) setTxtProgressBar(pb, k)
-
-    if (cusum_flag && multiresolution_flag) return(list(multiresolution_interval = multiresolution_interval, cusum_interval = cusum_interval))
-
   }
   
-
+  
   return(list(multiresolution_interval = multiresolution_interval, cusum_interval = cusum_interval))
+  
   
 }
 
 
 
-compare_interval_widths <- function(n, M, cpt_loc, cpt_energy, monte_carlo_reps, cusum_thresh, alpha = 0.05, seed = 42, display_prog_bar = TRUE) {
+compare_interval_widths <- function(n, cpt_loc, cpt_energy, monte_carlo_reps, cusum_thresh, alpha = 0.05, seed = 42, display_prog_bar = TRUE) {
   
-  #'Monte Carlo simulations to compare width of detection intervals from CUSUM test and multiresoolution test  
+  #' Monte Carlo simulations to compare width of detection intervals from CUSUM test and multiresoolution tests for fixed energy
   #' 
   #' @param n int, length of signal
   #' @param M int, 
@@ -353,14 +324,14 @@ compare_interval_widths <- function(n, M, cpt_loc, cpt_energy, monte_carlo_reps,
     
     x <- make_signal(n, cpt_loc, cpt_energy)
     
-    test_intervals <- sampling_scheme(x, M, cusum_thresh, alpha, show_prog = FALSE)
+    test_intervals <- apply_tests_to_signal(x, cpt_loc, cusum_thresh, alpha, show_prog = FALSE)
     
     
     multiresolution_res[j,1:2] <- test_intervals$multiresolution_interval
     
     if (cpt_loc %in% test_intervals[[1]][1]:test_intervals[[1]][2]) multiresolution_res[j,3] <- 1 
     
-
+    
     cusum_res[j,1:2] <- test_intervals$cusum_interval
     
     if (cpt_loc %in% test_intervals[[2]][1]:test_intervals[[2]][2]) cusum_res[j,3] <- 1
@@ -369,7 +340,7 @@ compare_interval_widths <- function(n, M, cpt_loc, cpt_energy, monte_carlo_reps,
     if (display_prog_bar) setTxtProgressBar(pb, j)
     
   }
-
+  
   
   return(list(multiresolution = multiresolution_res, cusum = cusum_res))
   
@@ -385,7 +356,7 @@ compare_interval_widths <- function(n, M, cpt_loc, cpt_energy, monte_carlo_reps,
 
 
 
-run_simulation_wrapper <- function(n, cpt_loc, rho_seq, alpha, cusum_thresh, monte_carlo_reps, M) {
+run_simulation_wrapper <- function(n, cpt_loc, rho_seq, alpha, cusum_thresh, monte_carlo_reps) {
   
   #' Run simulation to compare average interval widths
   
@@ -403,7 +374,7 @@ run_simulation_wrapper <- function(n, cpt_loc, rho_seq, alpha, cusum_thresh, mon
     
     cpt_energy <- (1 + rho_seq[k]) * sqrt(2*log(n))
     
-    RES <- compare_interval_widths(n, M, cpt_loc, cpt_energy, monte_carlo_reps, cusum_thresh, alpha, display_prog_bar = FALSE)
+    RES <- compare_interval_widths(n, cpt_loc, cpt_energy, monte_carlo_reps, cusum_thresh, alpha, display_prog_bar = FALSE)
     
 
     if (all(RES$multiresolution[,1] == 0)) {
@@ -426,13 +397,10 @@ run_simulation_wrapper <- function(n, cpt_loc, rho_seq, alpha, cusum_thresh, mon
     } else {
       
       res <- subset(RES$cusum, RES$cusum[,1] > 0)
-      
+     
+      cusum_widths[k] <- mean(sapply(1:nrow(res), function(i) diff(res[i,1:2]) + 1))
+       
     }
-    
-    res <- subset(RES$cusum, RES$cusum[,1] > 0)
-    
-    cusum_widths[k] <- mean(sapply(1:nrow(res), function(i) diff(res[i,1:2]) + 1))
-    
     
     setTxtProgressBar(pb, k)
     
@@ -452,12 +420,13 @@ plot_simulation_wrapper <- function(rho_seq, cusum_widths, multiresolution_width
   
   plot(rho_seq, multiresolution_widths,
        ylim = c(0, max(max(multiresolution_widths, na.rm = TRUE), max(cusum_widths, na.rm = TRUE))),
-       type = "b",
-       xlab = "1 + rho",
+       type = "l",
+       lty = 2,
+       xlab = "rho",
        ylab = "mean interval width"
   )
   
-  lines(rho_seq, cusum_widths, type = "b", col = "red")
+  lines(rho_seq, cusum_widths, type = "l", lty = 2, col = "red")
   
 }
 
@@ -473,10 +442,10 @@ plot_simulation_wrapper <- function(rho_seq, cusum_widths, multiresolution_width
 ## simulation params
 
 
-rho_seq <- seq(from = 0, to = 10, by = 0.5)
+rho_seq <- seq(from = 0, to = 6, by = 0.1)
 K <- length(rho_seq)
 M <- 10**3
-monte_carlo_reps <- 500
+monte_carlo_reps <- 100
 alpha  <- 0.05
 
 
@@ -487,7 +456,7 @@ n <- 100; cpt_loc <- n/2
 cusum_thresh_100 <- bisect_get_cusum_thresh(n, 4, 10, alpha) # 4.070312
 
 
-res_n_100 <- run_simulation_wrapper(n, cpt_loc, rho_seq, alpha, cusum_thresh_100, monte_carlo_reps, M)
+res_n_100 <- run_simulation_wrapper(n, cpt_loc, rho_seq, alpha, cusum_thresh_100, monte_carlo_reps)
 
 plot_simulation_wrapper(rho_seq, res_n_100$cusum_widths, res_n_100$multiresolution_widths)
 
