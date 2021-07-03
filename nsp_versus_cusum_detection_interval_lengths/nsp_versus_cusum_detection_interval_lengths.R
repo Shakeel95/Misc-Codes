@@ -363,9 +363,9 @@ run_simulation_wrapper <- function(n, cpt_loc, rho_seq, alpha, cusum_thresh, mon
   
   K <- length(rho_seq)
   
-  cusum_widths <- numeric(K)
+  cusum_widths <- numeric(K); cusum_detection <- numeric(K)
   
-  multiresolution_widths <- numeric(K)
+  multiresolution_widths <- numeric(K); multiresolution_detection <- numeric(K)
   
   pb <- txtProgressBar(min = 1, max = K, style = 3)
   
@@ -375,6 +375,11 @@ run_simulation_wrapper <- function(n, cpt_loc, rho_seq, alpha, cusum_thresh, mon
     cpt_energy <- (1 + rho_seq[k]) * sqrt(2*log(n))
     
     RES <- compare_interval_widths(n, cpt_loc, cpt_energy, monte_carlo_reps, cusum_thresh, alpha, display_prog_bar = FALSE)
+    
+    
+    multiresolution_detection[k] <- mean(RES$multiresolution[,3])
+    
+    cusum_detection[k] <- mean(RES$cusum[,3])
     
 
     if (all(RES$multiresolution[,1] == 0)) {
@@ -407,26 +412,43 @@ run_simulation_wrapper <- function(n, cpt_loc, rho_seq, alpha, cusum_thresh, mon
   }
   
   
-  return(list(cusum_widths = cusum_widths, multiresolution_widths = multiresolution_widths))
+  return(list(cusum_widths = cusum_widths, multiresolution_widths = multiresolution_widths,
+              cusum_detection = cusum_detection, multiresolution_detection = multiresolution_detection)
+         )
   
 }
 
 
 
-plot_simulation_wrapper <- function(rho_seq, cusum_widths, multiresolution_widths) {
+plot_simulation_wrapper <- function(rho_seq, simulation_res) {
   
   #' Plot outputs from `run_simulation_wrapper`
+  #' 
+  #'@param rho_seq vector, numerical constants on signal strength used in simulations
+  #'@param simulation_res list, output from `run_simulation_wrapper`
   
   
-  plot(rho_seq, multiresolution_widths,
-       ylim = c(0, max(max(multiresolution_widths, na.rm = TRUE), max(cusum_widths, na.rm = TRUE))),
+  plot(rho_seq, simulation_res$multiresolution_widths,
+       ylim = c(0, max(max(simulation_res$multiresolution_widths, na.rm = TRUE), max(simulation_res$cusum_widths, na.rm = TRUE))),
        type = "l",
        lty = 2,
        xlab = "rho",
        ylab = "mean interval width"
   )
   
-  lines(rho_seq, cusum_widths, type = "l", lty = 2, col = "red")
+  lines(rho_seq, simulation_res$cusum_widths, type = "l", lty = 2, col = "red")
+  
+  
+  plot(rho_seq, simulation_res$multiresolution_detection,
+       ylim = c(0,1),
+       type = "l",
+       lty = 2,
+       xlab = "rho",
+       ylab = "prop. changes correctly detected"
+  )
+  
+  lines(rho_seq, simulation_res$cusum_detection, type = "l", lty = 2, col = "red")
+  
   
 }
 
@@ -443,41 +465,22 @@ plot_simulation_wrapper <- function(rho_seq, cusum_widths, multiresolution_width
 
 
 rho_seq <- seq(from = 0, to = 6, by = 0.1)
+
 K <- length(rho_seq)
-M <- 10**3
+
 monte_carlo_reps <- 100
+
 alpha  <- 0.05
 
+n <- 100 
 
-## n = 100
-
-n <- 100; cpt_loc <- n/2
+cpt_loc <- floor(n/2)
 
 cusum_thresh_100 <- bisect_get_cusum_thresh(n, 4, 10, alpha) # 4.070312
 
 
-res_n_100 <- run_simulation_wrapper(n, cpt_loc, rho_seq, alpha, cusum_thresh_100, monte_carlo_reps)
+## run simulation
 
-plot_simulation_wrapper(rho_seq, res_n_100$cusum_widths, res_n_100$multiresolution_widths)
+res <- run_simulation_wrapper(n, cpt_loc, rho_seq, alpha, cusum_thresh_100, monte_carlo_reps)
 
-
-## n = 500 
-
-n <- 500; cpt_loc <- n/2
-cusum_thresh_500 <- bisect_get_cusum_thresh(n, 4, 10, alpha) # 4.644531
-
-res_n_100 <- run_simulation_wrapper(n, cpt_loc, rho_seq, alpha, cusum_thresh_500, monte_carlo_reps, M)
-
-plot_simulation_wrapper(rho_seq, res_n_100$cusum_widths, res_n_100$multiresolution_widths)
-
-
-# n = 1000 
-
-
-n <- 1000; cpt_loc <- n/2
-cusum_thresh_1000 <- bisect_get_cusum_thresh(n, 4, 10, alpha) # 4.84375
-
-res_n_100 <- run_simulation_wrapper(n, cpt_loc, rho_seq, alpha, cusum_thresh_1000, monte_carlo_reps, M)
-
-plot_simulation_wrapper(rho_seq, res_n_100$cusum_widths, res_n_100$multiresolution_widths)
-
+plot_simulation_wrapper(rho_seq, simulation_res = res)

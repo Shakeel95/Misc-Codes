@@ -14,4 +14,6 @@ The simulation suggest that the interval width needed for detection by the CUSUM
 
 ![](detection_interval_lengths.png)
 
-*what is not shown by the simulation is that for low signal strength the CUSUM statistic is more powerful for detecting a change regardless of the interval used; for example with \rho \in (2,3) the CUSUM statistic almost always correctly declared a changepoint (over Monte Carlo replications) however the multiresolution test would only detect a change over ~60% of tests*
+*what is not shown by the previous plot is that for low signal strength the CUSUM statistic is more powerful for detecting a change regardless of the length of the interval used. The next plot shows the proportion of tests which correclty detetced a changepoint across Monte Carlo replications for each signal strength:*
+
+![](prop_correct_detetcted.png)
