@@ -102,6 +102,8 @@ get.multiresolution.fitted.values <- function(mr.fit, x)
 #
 #------------------------------------------------------------------------------
 
+set.seed(42)
+
 n <- 100
 x <- 1:n / n 
 e <- rnorm(n)
@@ -214,6 +216,6 @@ mr.fit.noisy <- fit.with.multiresolution(y, cbind(x, x**2))
 
 plot(y ~ x, type = "l", col = "grey", main = "noisy fit")
 lines(s ~ x, col = "grey")
-lines(lm.fit.noiseless$fitted.values ~ x, col = "red")
-lines(get.multiresolution.fitted.values(mr.fit.noiseless, cbind(x**0, x, x**2)) ~ x, col = "blue")
+lines(lm.fit.noisy$fitted.values ~ x, col = "red")
+lines(get.multiresolution.fitted.values(mr.fit.noisy, cbind(x**0, x, x**2)) ~ x, col = "blue")
 
