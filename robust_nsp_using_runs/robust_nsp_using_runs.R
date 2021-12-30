@@ -63,7 +63,7 @@ get.bounds.non.decreasing <- function(yy, max.runs)
   
   for (ii in (max.runs+1):nn)
   {
-    if (all(yy[(ii-max.runs-1):(ii-1)] < ll[(ii-max.runs-1):(ii-1)])) return(list(shape.check = FALSE))
+    if (all(yy[(ii-max.runs-1):(ii-1)] < ll[(ii-max.runs-1):(ii-1)])) return(list(shape.check = FALSE)) # checking for a change in monotonicity 
     ll[ii] <- max(c(ll[ii-1], min(yy[(ii-max.runs):ii])))
   }
   
@@ -147,7 +147,7 @@ runs.thresh <- function(n, a = .1)
   #'@param n int 
   #'@param a float
   
-  1 + log(n-1) + (1/log(2)) * log(1/log(1/(1-a)))
+  log2(n-1) + (1/log(2)) * log(1/log(1/(1-a)))
   
 }
 
@@ -163,10 +163,15 @@ runs.test <- function(yy, thresh, deg)
   
   if (max.runs >= length(yy)) return(0)
   
+  
+  no.fits <- TRUE
+  
   test.non.increasing <- get.bounds.non.increasing(yy, max.runs)
   
   if (test.non.increasing$shape.check) 
   {
+    
+    no.fits <- FALSE
     
     if (deg == 0)
     {
@@ -192,6 +197,9 @@ runs.test <- function(yy, thresh, deg)
   
   if (test.non.decreasing$shape.check)
   {
+    
+    no.fits <- FALSE
+    
     if (deg == 0)
     {
       
@@ -210,9 +218,13 @@ runs.test <- function(yy, thresh, deg)
     }
   }
   
+  
+  if (no.fits) return(1)
+  
   return(0)
   
 }
+
 
 runs.test.experimental <- function(yy, thresh) 
 {
