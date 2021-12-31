@@ -189,7 +189,7 @@ multi.res.lower.bound <- function(yy, kappa)
 {
   #' Lower bound on isotonic reg function by inverting multi-resolution sign tests
   #'
-  #' Corresponds to test T^{0} in the paper (pp. 522)
+  #' Specifically, inverts test in robust NSP paper
   #'
   #'@param yy data vector
   #'@param kappa critical value (pp. 523, table 1)
