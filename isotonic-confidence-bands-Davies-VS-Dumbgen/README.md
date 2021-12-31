@@ -1,0 +1,7 @@
+# Comparison of robust confidence bands for regression functions
+
+Certain robust tests can be efficiently inverted. The inverted tests can be used to obtain confidence sets for isotonic regression functions, or more generally regression functions with a pre-chosen number of local maxima / minima. Such confidence sets are useful for robust change point detection and inference, since an honest confidence set for the regression function can be used as an input for certain change point tests - see for example [here](https://github.com/Shakeel95/CMStatistics-2021). 
+
+[Davies and Kovac](https://projecteuclid.org/journals/annals-of-statistics/volume-29/issue-1/Local-Extremes-Runs-Strings-and-Multiresolution/10.1214/aos/996986501.full) propose inverting the runs test for noise. [Dumbgen and Johns](https://www.tandfonline.com/doi/abs/10.1198/1061860043506) invert tests based on scaled and weighted multi-resolution norms of signs. [Fryzlewicz](https://arxiv.org/abs/2109.02487) uses a test based on an un-weighted multi-resolution norm to detect change points, and this test can also be inverted. 
+
+I provide implementations of the inversions mentioned above, and compare the performance empirically. The runs test is always the fastest to invert. The least wide confidence sets are typically given by the scaled / corrected test in Dumbgen and Johns and the test in Fryzlewicz. Of the remaining tests, the runs test of Davies and Kovac typically outperforms the weighted multi-resolution test. 
