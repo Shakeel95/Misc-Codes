@@ -136,7 +136,7 @@ thresh.kab.bern <- function(nn, alpha = 0.1)
   #'@references https://doi.org/10.1016/j.spa.2014.03.015
   #'@references https://arxiv.org/abs/2109.02487
   
-  alpha <- alpha / 2
+  alpha <- alpha
   
   an <- sqrt(2 * log(nn*log(nn)^(-1/2)))
   tau <- -log(-1/(2*0.2740311) * log(1 - alpha))

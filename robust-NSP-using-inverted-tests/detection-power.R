@@ -17,14 +17,14 @@ changepoint.models <- list(
   model.blocks = list(
     name = "blocks",
     signal = c(rep(0,205),rep(14.64,62),rep(-3.66,41),rep(7.32,164),rep(-7.32,40)),
-    simulate = function() c(rep(0,205),rep(14.64,62),rep(-3.66,41),rep(7.32,164),rep(-7.32,40)) + rnorm(512, sd = 7),
+    simulate = function() c(rep(0,205),rep(14.64,62),rep(-3.66,41),rep(7.32,164),rep(-7.32,40)) + rnorm(512, sd = 10),
     cpt.locs = c(205, 267, 308, 472)
   ),
 
   model.cauchy = list(
     name = "Cauchy",
     signal = c(rep(2.5,100), rep(5,100), rep(2.5,100)),
-    simulate = function() c(rcauchy(100, 2.5), rcauchy(100, 5), rcauchy(100, 2.5)),
+    simulate = function() c(rcauchy(100, 1), rcauchy(100, 2), rcauchy(100, 1)),
     cpt.locs = c(100, 200, 300)
   ),
 
