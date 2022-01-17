@@ -32,7 +32,7 @@ corrected.multi.res.lower.bound <- function(yy, kappa)
   #' Corresponds to test T^{0} in the paper (pp. 522)
   #'
   #'@param yy data vector
-  #'@param kappa critical value (pp. 523, table 1)
+  #'@param kappa vector, total sample size and critical value (pp. 523, table 1)
   #'
   #'@references https://doi.org/10.1198/1061860043506
   

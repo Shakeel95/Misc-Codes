@@ -1,12 +1,3 @@
-## Implements robust NSP variants to be compared 
-## 
-##
-## IMPORTANT! 
-##
-## Before running the code load the file NSP_for+Github***.R from: https://github.com/pfryz/nsp/
-##
-
-
 #-------------------------------------------------------------------
 #
 # Generic functions to test for change points using inverted tests
