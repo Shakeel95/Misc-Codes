@@ -37,6 +37,8 @@ corrected.multi.res.lower.bound <- function(yy, kappa)
   #'@references https://doi.org/10.1198/1061860043506
   
   nn <- length(yy)
+  NN <- kappa[1]
+  lambda <- kappa[2]
   ll <- numeric(nn)
   
   for (kk in 1:nn)
@@ -68,7 +70,7 @@ corrected.multi.res.lower.bound <- function(yy, kappa)
       
       dd <- kk-jj+1
       
-      if (SS <= sqrt(dd) * (kappa + sqrt(2*log(exp(1)*nn/dd))))
+      if (SS <= sqrt(dd) * (lambda + sqrt(2*log(exp(1)*NN/dd))))
       {
         jj <- jj - 1
       } else {

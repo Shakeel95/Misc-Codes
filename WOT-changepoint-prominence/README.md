@@ -1,3 +1,0 @@
-# Widest Over Threshold
-
-Ranking changepoints using widest single-changepoint intervals... 

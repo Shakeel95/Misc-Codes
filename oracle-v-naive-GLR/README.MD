@@ -1,3 +1,0 @@
-# Oracle GLR Statistic v Self Normalisation
-
-Trying out a new panel changepoint test...

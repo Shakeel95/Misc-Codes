@@ -87,7 +87,7 @@ multi.sup.norm <- function(xx)
 #------------------------------------------------
 
 
-rnsp.inv <- function(xx, method, thresh = NULL)
+rnsp.inv <- function(xx, method, thresh)
 {
   #' Local test for change points based on inverting multi-resolution sign test
   #'
@@ -101,9 +101,6 @@ rnsp.inv <- function(xx, method, thresh = NULL)
   
   if (method == "mr.inv")
   {
-    
-    if (is.null(thresh)) thresh <- thresh.kab.bern(nn)
-    
     bb.non.decreasing <- get.bounds.non.decreasing(xx, multi.res.lower.bound, thresh)
     non.decreasing <- (min(bb.non.decreasing$uu) >= max(bb.non.decreasing$ll))
     
@@ -113,8 +110,6 @@ rnsp.inv <- function(xx, method, thresh = NULL)
     return(as.numeric(!(non.increasing & non.decreasing)))
     
   } else if (method == "mr.inv.corrected") {
-    
-    if (is.null(thresh)) thresh <- thresh.dumbgen.T0(nn)
         
     bb.non.decreasing <- get.bounds.non.decreasing(xx, corrected.multi.res.lower.bound, thresh)
     non.decreasing <- (min(bb.non.decreasing$uu) >= max(bb.non.decreasing$ll))
